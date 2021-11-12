@@ -1,46 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BeatSaberMarkupLanguage;
-using BeatSaberMarkupLanguage.Components;
+﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
+using BeatSaberMarkupLanguage.GameplaySetup;
+using System;
+using Zenject;
+
 namespace IntroSkip.UI
 {
-    public class ModifierUI : NotifiableSingleton<ModifierUI>
+    internal class ModifierUI : IInitializable, IDisposable
     {
-        [UIValue("introSkipToggle")]
-        public bool introSkipToggle
-        {
-            get => Config.AllowIntroSkip;
-            set
-            {
-                Config.AllowIntroSkip = value;
-                Config.Write();
-            }
-        }
-        [UIAction("setIntroSkipToggle")]
-        void SetIntro(bool value)
-        {
-            introSkipToggle = value;
-        }
-        [UIValue("outroSkipToggle")]
-        public bool outroSkipToggle
-        {
-            get => Config.AllowOutroSkip;
-            set
-            {
-                Config.AllowOutroSkip = value;
-                Config.Write();
-            }
-        }
-        [UIAction("setOutroSkipToggle")]
-        void SetOutro(bool value)
-        {
-            outroSkipToggle = value;
-        }
-      
+        private readonly Config _config;
 
+        [UIValue("intro-skip-toggle")]
+        public bool IntroSkipToggle
+        {
+            get => _config.AllowIntroSkip;
+            set => _config.AllowIntroSkip = value;
+        }
+
+        [UIValue("outro-skip-toggle")]
+        public bool OutroSkipToggle
+        {
+            get => _config.AllowOutroSkip;
+            set => _config.AllowOutroSkip = value;
+        }
+
+        public ModifierUI(Config config)
+        {
+            _config = config;
+        }
+
+        public void Initialize()
+        {
+            GameplaySetup.instance.AddTab("Intro Skip", "IntroSkip.UI.modifier-ui.bsml", this);
+        }
+
+        public void Dispose()
+        {
+            if (GameplaySetup.IsSingletonAvailable && BSMLParser.IsSingletonAvailable)
+                GameplaySetup.instance.RemoveTab("Intro Skip");
+        }
+
+        [UIAction("set-intro-skip-toggle")]
+        protected void SetIntro(bool value) => IntroSkipToggle = value;
+
+        [UIAction("set-outro-skip-toggle")]
+        protected void SetOutro(bool value) => OutroSkipToggle = value;
     }
 }

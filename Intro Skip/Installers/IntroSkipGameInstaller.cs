@@ -1,23 +1,23 @@
-﻿using SiraUtil;
-using Zenject;
+﻿using Zenject;
 
 namespace IntroSkip.Installers
 {
-    public class IntroSkipGameInstaller : Installer
+    internal class IntroSkipGameInstaller : Installer
     {
+        private readonly Config _config;
         private readonly GameplayCoreSceneSetupData _gameplayCoreSceneSetupData;
 
-        public IntroSkipGameInstaller(GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
+        public IntroSkipGameInstaller(Config config, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
         {
+            _config = config;
             _gameplayCoreSceneSetupData = gameplayCoreSceneSetupData;
         }
 
         public override void InstallBindings()
         {
-            Config.Read();
-            if ((Config.AllowIntroSkip || Config.AllowOutroSkip) && _gameplayCoreSceneSetupData.practiceSettings == null && !BS_Utils.Gameplay.Gamemode.IsIsolatedLevel)
+            if ((_config.AllowIntroSkip || _config.AllowOutroSkip) && _gameplayCoreSceneSetupData.practiceSettings == null)
             {
-                Container.Bind<SkipBehavior>().FromNewComponentOnNewGameObject("IntroSkip Behavior").AsSingle().NonLazy();
+                Container.BindInterfacesTo<SkipDaemon>().AsSingle();
             }
         }
     }

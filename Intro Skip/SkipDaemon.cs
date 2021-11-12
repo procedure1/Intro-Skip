@@ -1,42 +1,45 @@
-﻿using TMPro;
-using Zenject;
-using System.Linq;
+﻿using BeatSaberMarkupLanguage;
+using SiraUtil.Logging;
+using TMPro;
 using UnityEngine;
-using IPA.Utilities;
-using System.Collections;
-using BeatSaberMarkupLanguage;
+using UnityEngine.XR;
+using Zenject;
 
 namespace IntroSkip
 {
-    public class SkipBehavior : MonoBehaviour
+    internal class SkipDaemon : IInitializable, ITickable
     {
-        private bool _init = false;
-        private AudioSource _songAudio;
-        private TextMeshProUGUI _skipPrompt;
-        private IVRPlatformHelper _vrPlatformHelper;
-        private BeatmapObjectCallbackController _callbackController;
-        private AudioTimeSyncController _audioTimeSyncController;
-        private VRControllersInputManager _vrControllersInputManager;
 
+        private readonly Config _config;
+        private readonly SiraLog _siraLog;
+        private readonly IVRPlatformHelper _vrPlatformHelper;
+        private readonly IDifficultyBeatmap _difficultyBeatmap;
+        private readonly AudioTimeSyncController _audioTimeSyncController;
+        private readonly VRControllersInputManager _vrControllersInputManager;
+        private readonly AudioTimeSyncController.InitData _initData;
+
+        private bool _init = false;
         private bool _skippableOutro = false;
         private bool _skippableIntro = false;
         private float _introSkipTime = -1f;
         private float _outroSkipTime = -1f;
         private float _lastObjectSkipTime = -1f;
+        private TextMeshProUGUI? _skipPrompt;
 
-        [Inject]
-        public void Construct(IVRPlatformHelper vrPlatformHelper, BeatmapObjectCallbackController callbackController, AudioTimeSyncController audioTimeSyncController, VRControllersInputManager vrControllersInputManager)
+        public SkipDaemon(Config config, SiraLog siraLog, IVRPlatformHelper vrPlatformHelper, IDifficultyBeatmap difficultyBeatmap, AudioTimeSyncController audioTimeSyncController, VRControllersInputManager vrControllersInputManager, AudioTimeSyncController.InitData initData)
         {
+            _config = config;
+            _siraLog = siraLog;
+            _initData = initData;
             _vrPlatformHelper = vrPlatformHelper;
-            _callbackController = callbackController;
+            _difficultyBeatmap = difficultyBeatmap;
             _audioTimeSyncController = audioTimeSyncController;
             _vrControllersInputManager = vrControllersInputManager;
         }
 
-        public void Start()
+        public void Initialize()
         {
             CreatePrompt();
-            _songAudio = _audioTimeSyncController.GetField<AudioSource, AudioTimeSyncController>("_audioSource");
             ReadMap();
         }
 
@@ -53,15 +56,14 @@ namespace IntroSkip
 
         public void ReadMap()
         {
-         //   yield return new WaitForSeconds(1f);
-            var lineData = _callbackController.GetField<IReadonlyBeatmapData, BeatmapObjectCallbackController>("_beatmapData").beatmapLinesData;
-            float firstObjectTime = _songAudio.clip.length;
+            var lineData = _difficultyBeatmap.beatmapData.beatmapLinesData;
+            float firstObjectTime = _initData.audioClip.length;
             float lastObjectTime = -1f;
-            foreach(var line in lineData)
+            foreach (var line in lineData)
             {
-                foreach(var beatmapObject in line.beatmapObjectsData)
+                foreach (var beatmapObject in line.beatmapObjectsData)
                 {
-                    switch(beatmapObject.beatmapObjectType)
+                    switch (beatmapObject.beatmapObjectType)
                     {
                         case BeatmapObjectType.Note:
                             if (beatmapObject.time < firstObjectTime)
@@ -70,8 +72,8 @@ namespace IntroSkip
                                 lastObjectTime = beatmapObject.time;
                             break;
                         case BeatmapObjectType.Obstacle:
-                            ObstacleData obstacle = beatmapObject as ObstacleData;
-                            if(!(obstacle.lineIndex == 0 && obstacle.width == 1) && !(obstacle.lineIndex == 3 && obstacle.width == 1))
+                            ObstacleData obstacle = (beatmapObject as ObstacleData)!;
+                            if (!(obstacle.lineIndex == 0 && obstacle.width == 1) && !(obstacle.lineIndex == 3 && obstacle.width == 1))
                             {
                                 if (beatmapObject.time < firstObjectTime)
                                     firstObjectTime = beatmapObject.time;
@@ -84,19 +86,19 @@ namespace IntroSkip
             }
             if (firstObjectTime > 5f)
             {
-                _skippableIntro = Config.AllowIntroSkip;
+                _skippableIntro = _config.AllowIntroSkip;
                 _introSkipTime = firstObjectTime - 2f;
             }
-            if ((_songAudio.clip.length - lastObjectTime) >= 5f)
+            if ((_initData.audioClip.length - lastObjectTime) >= 5f)
             {
-                _skippableOutro = Config.AllowOutroSkip;
-                _outroSkipTime = _songAudio.clip.length - 1.5f;
+                _skippableOutro = _config.AllowOutroSkip;
+                _outroSkipTime = _initData.audioClip.length - 1.5f;
                 _lastObjectSkipTime = lastObjectTime + 0.5f;
             }
             _init = true;
-            Logger.log.Debug($"Skippable Intro: {_skippableIntro} | Skippable Outro: {_skippableOutro}");
-            Logger.log.Debug($"First Object Time: {firstObjectTime} | Last Object Time: {lastObjectTime}");
-            Logger.log.Debug($"Intro Skip Time: {_introSkipTime} | Outro Skip Time: {_outroSkipTime}");
+            _siraLog.Debug($"Skippable Intro: {_skippableIntro} | Skippable Outro: {_skippableOutro}");
+            _siraLog.Debug($"First Object Time: {firstObjectTime} | Last Object Time: {lastObjectTime}");
+            _siraLog.Debug($"Intro Skip Time: {_introSkipTime} | Outro Skip Time: {_outroSkipTime}");
         }
 
         private void CreatePrompt()
@@ -109,27 +111,30 @@ namespace IntroSkip
             _canvas.renderMode = RenderMode.WorldSpace;
             _canvas.enabled = false;
             var rectTransform = _canvas.transform as RectTransform;
-            rectTransform.sizeDelta = new Vector2(100, 50);
+            rectTransform!.sizeDelta = new Vector2(100, 50);
 
             _skipPrompt = BeatSaberUI.CreateText(_canvas.transform as RectTransform, "Press Trigger To Skip", new Vector2(0, 10));
             rectTransform = _skipPrompt.transform as RectTransform;
-            rectTransform.SetParent(_canvas.transform, false);
+            rectTransform!.SetParent(_canvas.transform, false);
             rectTransform.sizeDelta = new Vector2(100, 20);
             _skipPrompt.fontSize = 15f;
             _canvas.enabled = true;
             _skipPrompt.gameObject.SetActive(false);
         }
 
-        public void Update()
+        public void Tick()
         {
-            if (!_init || _songAudio == null) return;
+            if (!_init || _skipPrompt == null)
+                return;
+
             if (!(_skippableIntro || _skippableOutro))
             {
-                if (_skipPrompt.gameObject.activeSelf) _skipPrompt.gameObject.SetActive(false);
+                if (_skipPrompt.gameObject.activeSelf)
+                    _skipPrompt.gameObject.SetActive(false);
                 return;
             }
 
-            float time = _songAudio.time;
+            float time = _audioTimeSyncController.audioSource.time;
             bool introPhase = (time < _introSkipTime) && _skippableIntro;
             bool outroPhase = (time > _lastObjectSkipTime && time < _outroSkipTime) && _skippableOutro;
 
@@ -138,29 +143,28 @@ namespace IntroSkip
                 if (!_skipPrompt.gameObject.activeSelf)
                     _skipPrompt.gameObject.SetActive(true);
             }
-            else 
+            else
             {
                 if (_skipPrompt.gameObject.activeSelf)
                     _skipPrompt.gameObject.SetActive(false);
                 return;
             }
-            if ( _audioTimeSyncController.state == AudioTimeSyncController.State.Playing && (_vrControllersInputManager.TriggerValue(UnityEngine.XR.XRNode.LeftHand) >= .8 || _vrControllersInputManager.TriggerValue(UnityEngine.XR.XRNode.RightHand) >= .8 || Input.GetKey(KeyCode.I)))
+            if (_audioTimeSyncController.state == AudioTimeSyncController.State.Playing && (_vrControllersInputManager.TriggerValue(UnityEngine.XR.XRNode.LeftHand) >= .8 || _vrControllersInputManager.TriggerValue(XRNode.RightHand) >= .8 || Input.GetKey(KeyCode.I)))
             {
-                Logger.log.Debug("Skip Triggered At:" + time);
+                _siraLog.Debug("Skip Triggered At:" + time);
                 _vrPlatformHelper.TriggerHapticPulse(UnityEngine.XR.XRNode.LeftHand, 0.1f, 0.2f, 1);
                 _vrPlatformHelper.TriggerHapticPulse(UnityEngine.XR.XRNode.RightHand, 0.1f, 0.2f, 1);
                 if (introPhase)
                 {
-                    _songAudio.time = _introSkipTime;
+                    _audioTimeSyncController.audioSource.time = _introSkipTime;
                     _skippableIntro = false;
                 }
                 else if (outroPhase)
                 {
-                    _songAudio.time = _outroSkipTime;
+                    _audioTimeSyncController.audioSource.time = _outroSkipTime;
                     _skippableOutro = false;
                 }
             }
         }
-
     }
 }
