@@ -73,16 +73,8 @@
 			<HintPath>$(BeatSaberDir)\Libs\SemVer.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
-		<Reference Include="BS_Utils">
-			<HintPath>$(BeatSaberDir)\Plugins\BS_Utils.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
 		<Reference Include="SiraUtil">
 			<HintPath>$(BeatSaberDir)\Plugins\SiraUtil.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="SongCore">
-			<HintPath>$(BeatSaberDir)\Plugins\SongCore.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="UnityEngine">
