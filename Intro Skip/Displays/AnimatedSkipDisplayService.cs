@@ -1,17 +1,24 @@
 ﻿using BeatSaberMarkupLanguage;
 using TMPro;
+using Tweening;
 using UnityEngine;
 
 namespace IntroSkip.Displays
 {
-    internal class SkipDisplayService : ISkipDisplayService
+    internal class AnimatedSkipDisplayService : ISkipDisplayService
     {
+        private readonly TimeTweeningManager _timeTweeningManager;
         private TextMeshProUGUI? _skipPromptText;
         private GameObject? _skipPromptObject;
+        private bool _enabled;
 
+        public bool Active => _enabled;
         private bool Created => _skipPromptText != null && _skipPromptObject != null;
 
-        public bool Active => _skipPromptObject != null && _skipPromptObject.activeSelf;
+        public AnimatedSkipDisplayService(TimeTweeningManager timeTweeningManager)
+        {
+            _timeTweeningManager = timeTweeningManager;
+        }
 
         public void Show()
         {
@@ -36,14 +43,38 @@ namespace IntroSkip.Displays
                 _skipPromptText.fontSize = 15f;
                 canvas.enabled = true;
             }
-            _skipPromptObject!.SetActive(true);
+            _enabled = true;
+            AnimateIn();
         }
 
         public void Hide()
         {
             if (Created)
             {
-                _skipPromptObject!.SetActive(false);
+                AnimateOut();
+                _enabled = false;
+            }
+        }
+
+        private void AnimateIn()
+        {
+            if (Created)
+            {
+                _timeTweeningManager.KillAllTweens(_skipPromptText!);
+                Tween tween = new FloatTween(_skipPromptText!.color.a, 1f, u => _skipPromptText.color = _skipPromptText.color.ColorWithAlpha(u), 0.75f, EaseType.OutQuart);
+                _timeTweeningManager.AddTween(tween, _skipPromptText);
+                _skipPromptObject!.SetActive(true);
+            }
+        }
+
+        private void AnimateOut()
+        {
+            if (Created)
+            {
+                _timeTweeningManager.KillAllTweens(_skipPromptText!);
+                Tween tween = new FloatTween(_skipPromptText!.color.a, 0f, u => _skipPromptText.color = _skipPromptText.color.ColorWithAlpha(u), 0.75f, EaseType.OutQuart);
+                tween.onCompleted = tween.onKilled = () => _skipPromptObject!.SetActive(false);
+                _timeTweeningManager.AddTween(tween, _skipPromptText);
             }
         }
     }

@@ -20,7 +20,7 @@ namespace IntroSkip.Installers
             {
                 Container.BindInterfacesTo<SkipDaemon>().AsSingle();
             }
-            Container.Bind<ISkipDisplayService>().To(_gameplayCoreSceneSetupData.playerSpecificSettings.noTextsAndHuds ? typeof(NoSkipDisplayService) : typeof(SkipDisplayService)).AsSingle();
+            Container.Bind<ISkipDisplayService>().To(_gameplayCoreSceneSetupData.playerSpecificSettings.noTextsAndHuds ? typeof(NoSkipDisplayService) : typeof(AnimatedSkipDisplayService)).AsSingle();
         }
     }
 }
