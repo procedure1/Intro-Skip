@@ -9,22 +9,21 @@ namespace IntroSkip
 {
     internal class SkipDaemon : IInitializable, ITickable
     {
-
         private readonly Config _config;
         private readonly SiraLog _siraLog;
         private readonly IVRPlatformHelper _vrPlatformHelper;
         private readonly IDifficultyBeatmap _difficultyBeatmap;
-        private readonly AudioTimeSyncController _audioTimeSyncController;
-        private readonly VRControllersInputManager _vrControllersInputManager;
+        private AudioTimeSyncController _audioTimeSyncController;
         private readonly AudioTimeSyncController.InitData _initData;
+        private readonly VRControllersInputManager _vrControllersInputManager;
 
         private bool _init = false;
-        private bool _skippableOutro = false;
-        private bool _skippableIntro = false;
         private float _introSkipTime = -1f;
         private float _outroSkipTime = -1f;
-        private float _lastObjectSkipTime = -1f;
         private TextMeshProUGUI? _skipPrompt;
+        private bool _skippableOutro = false;
+        private bool _skippableIntro = false;
+        private float _lastObjectSkipTime = -1f;
 
         public SkipDaemon(Config config, SiraLog siraLog, IVRPlatformHelper vrPlatformHelper, IDifficultyBeatmap difficultyBeatmap, AudioTimeSyncController audioTimeSyncController, VRControllersInputManager vrControllersInputManager, AudioTimeSyncController.InitData initData)
         {
@@ -134,7 +133,7 @@ namespace IntroSkip
                 return;
             }
 
-            float time = _audioTimeSyncController.audioSource.time;
+            float time = Utilities.AudioTimeSyncSource(ref _audioTimeSyncController).time;
             bool introPhase = (time < _introSkipTime) && _skippableIntro;
             bool outroPhase = (time > _lastObjectSkipTime && time < _outroSkipTime) && _skippableOutro;
 
@@ -156,12 +155,12 @@ namespace IntroSkip
                 _vrPlatformHelper.TriggerHapticPulse(UnityEngine.XR.XRNode.RightHand, 0.1f, 0.2f, 1);
                 if (introPhase)
                 {
-                    _audioTimeSyncController.audioSource.time = _introSkipTime;
+                    Utilities.AudioTimeSyncSource(ref _audioTimeSyncController).time = _introSkipTime;
                     _skippableIntro = false;
                 }
                 else if (outroPhase)
                 {
-                    _audioTimeSyncController.audioSource.time = _outroSkipTime;
+                    Utilities.AudioTimeSyncSource(ref _audioTimeSyncController).time = _outroSkipTime;
                     _skippableOutro = false;
                 }
             }
