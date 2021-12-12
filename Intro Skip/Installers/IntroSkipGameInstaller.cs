@@ -1,4 +1,5 @@
-﻿using Zenject;
+﻿using IntroSkip.Displays;
+using Zenject;
 
 namespace IntroSkip.Installers
 {
@@ -19,6 +20,7 @@ namespace IntroSkip.Installers
             {
                 Container.BindInterfacesTo<SkipDaemon>().AsSingle();
             }
+            Container.Bind<ISkipDisplayService>().To(_gameplayCoreSceneSetupData.playerSpecificSettings.noTextsAndHuds ? typeof(NoSkipDisplayService) : typeof(SkipDisplayService)).AsSingle();
         }
     }
 }

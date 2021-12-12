@@ -5,10 +5,11 @@ using IntroSkip.UI;
 using Conf = IPA.Config.Config;
 using IPA.Logging;
 using IPA.Config.Stores;
+using SiraUtil.Attributes;
 
 namespace IntroSkip
 {
-    [Plugin(RuntimeOptions.DynamicInit)]
+    [Plugin(RuntimeOptions.DynamicInit), Slog]
     internal class Plugin
     {
         [Init]
