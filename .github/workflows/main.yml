@@ -30,7 +30,7 @@ jobs:
         id: Build
         env:
           FrameworkPathOverride: /usr/lib/mono/4.8-api
-        run: dotnet build Intro Skip/Intro Skip.csproj --configuration Release
+        run: dotnet build "Intro Skip/Intro Skip.csproj" --configuration Release
       - name: Git Status
         run: git status
       - name: Echo File Name
