@@ -1,11 +1,12 @@
 ﻿using BeatSaberMarkupLanguage;
+using System;
 using TMPro;
 using Tweening;
 using UnityEngine;
 
 namespace IntroSkip.Displays
 {
-    internal class AnimatedSkipDisplayService : ISkipDisplayService
+    internal class AnimatedSkipDisplayService : ISkipDisplayService, IDisposable
     {
         private readonly TimeTweeningManager _timeTweeningManager;
         private TextMeshProUGUI? _skipPromptText;
@@ -73,9 +74,19 @@ namespace IntroSkip.Displays
             {
                 _timeTweeningManager.KillAllTweens(_skipPromptText!);
                 Tween tween = new FloatTween(_skipPromptText!.color.a, 0f, u => _skipPromptText.color = _skipPromptText.color.ColorWithAlpha(u), 0.75f, EaseType.OutQuart);
-                tween.onCompleted = tween.onKilled = () => _skipPromptObject!.SetActive(false);
+                tween.onCompleted = tween.onKilled = delegate ()
+                {
+                    if (_skipPromptObject != null)
+                        _skipPromptObject.SetActive(false);
+                };
                 _timeTweeningManager.AddTween(tween, _skipPromptText);
             }
+        }
+
+        public void Dispose()
+        {
+            if (_skipPromptText != null)
+                _timeTweeningManager.KillAllTweens(_skipPromptText);
         }
     }
 }
