@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "Intro-Skip/**"
-      - "Intro-Skip.sln"
+      - "Intro Skip/**"
+      - "Intro Skip.sln"
       - ".github/workflows/main.yml"
 
 jobs:
@@ -20,17 +20,17 @@ jobs:
       - name: Acquire SIRA References
         uses: ProjectSIRA/download-sira-stripped@1.0.0
         with:
-          manifest: ./Intro-Skip/manifest.json
+          manifest: ./Intro Skip/manifest.json
           sira-server-code: ${{ secrets.SIRA_SERVER_CODE }}
       - name: Acquire Mod References
         uses: Goobwabber/download-beatmods-deps@1.2
         with:
-          manifest: ./Intro-Skip/manifest.json
+          manifest: ./Intro Skip/manifest.json
       - name: Build
         id: Build
         env:
           FrameworkPathOverride: /usr/lib/mono/4.8-api
-        run: dotnet build Intro-Skip/Intro-Skip.csproj --configuration Release
+        run: dotnet build Intro Skip/Intro Skip.csproj --configuration Release
       - name: Git Status
         run: git status
       - name: Echo File Name
@@ -41,5 +41,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: Intro-Skip
+          name: Intro Skip
           path: ${{ steps.Build.outputs.artifactpath }}
