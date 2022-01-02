@@ -9,7 +9,7 @@ using SiraUtil.Attributes;
 
 namespace IntroSkip
 {
-    [Plugin(RuntimeOptions.DynamicInit), Slog]
+    [Plugin(RuntimeOptions.DynamicInit), Slog, NoEnableDisable]
     internal class Plugin
     {
         [Init]
