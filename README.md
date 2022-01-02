@@ -6,6 +6,7 @@
 - Can be toggled in `UserData/IntroSkip.json`, as well as on modifiers menu in mods section.
 #### Changelog 4.0.0
 - Complete Internal Plugin Rewrite
+- Moved Settings from Gameplay tab to Settings Tab
 
 #### Changelog 3.0.0
 - Rewrite to not be a giant mess
