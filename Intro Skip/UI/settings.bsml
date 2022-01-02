@@ -1,0 +1,6 @@
+﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+	<settings-container>
+		<bool-setting value="intro-skip-toggle" on-change="set-intro-skip-toggle" text="Intro Skip" />
+		<bool-setting value="outro-skip-toggle" on-change="set-outro-skip-toggle" text="Outro Skip" />
+	</settings-container>
+</bg>

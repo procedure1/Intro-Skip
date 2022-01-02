@@ -37,6 +37,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="UI\intro-skip.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Reference Include="BeatmapCore">
 			<HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
 			<Private>False</Private>
@@ -150,7 +154,7 @@
 	<ItemGroup>
 		<EmbeddedResource Include="manifest.json" />
 		<EmbeddedResource Include="UI\intro-skip.png" />
-		<EmbeddedResource Include="UI\modifier-ui.bsml" />
+		<EmbeddedResource Include="UI\settings.bsml" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,12 +1,12 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.GameplaySetup;
+using BeatSaberMarkupLanguage.Settings;
 using System;
 using Zenject;
 
 namespace IntroSkip.UI
 {
-    internal class ModifierUI : IInitializable, IDisposable
+    internal class SettingsHost : IInitializable, IDisposable
     {
         private readonly Config _config;
 
@@ -24,20 +24,20 @@ namespace IntroSkip.UI
             set => _config.AllowOutroSkip = value;
         }
 
-        public ModifierUI(Config config)
+        public SettingsHost(Config config)
         {
             _config = config;
         }
 
         public void Initialize()
         {
-            GameplaySetup.instance.AddTab("Intro Skip", "IntroSkip.UI.modifier-ui.bsml", this);
+            BSMLSettings.instance.AddSettingsMenu("Intro Skip", "IntroSkip.UI.settings.bsml", this);
         }
 
         public void Dispose()
         {
-            if (GameplaySetup.IsSingletonAvailable && BSMLParser.IsSingletonAvailable)
-                GameplaySetup.instance.RemoveTab("Intro Skip");
+            if (BSMLParser.IsSingletonAvailable && BSMLSettings.instance != null)
+                BSMLSettings.instance.RemoveSettingsMenu(this);
         }
 
         [UIAction("set-intro-skip-toggle")]

@@ -21,7 +21,7 @@ namespace IntroSkip
             zenjector.UseLogger(logger);
             zenjector.Install(Location.App, Container => Container.BindInstance(config).AsCached());
             zenjector.Install<IntroSkipGameInstaller>(Location.StandardPlayer | Location.CampaignPlayer);
-            zenjector.Install(Location.Menu, Container => Container.BindInterfacesTo<ModifierUI>().AsSingle());
+            zenjector.Install(Location.Menu, Container => Container.BindInterfacesTo<SettingsHost>().AsSingle());
         }
     }
 }
