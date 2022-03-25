@@ -1,4 +1,5 @@
 ﻿using SiraUtil.Logging;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
 using Zenject;
@@ -10,11 +11,12 @@ namespace IntroSkip
         private readonly Config _config;
         private readonly SiraLog _siraLog;
         private readonly IVRPlatformHelper _vrPlatformHelper;
-        private readonly IDifficultyBeatmap _difficultyBeatmap;
         private readonly ISkipDisplayService _skipDisplayService;
         private AudioTimeSyncController _audioTimeSyncController;
+        private readonly IReadonlyBeatmapData _readonlyBeatmapData;
         private readonly AudioTimeSyncController.InitData _initData;
         private readonly VRControllersInputManager _vrControllersInputManager;
+        private readonly Rect _headSpaceRect = new Rect(2, 2, 1, 1);
 
         private float _introSkipTime = -1f;
         private float _outroSkipTime = -1f;
@@ -27,14 +29,14 @@ namespace IntroSkip
         public bool InOutroPhase => Utilities.AudioTimeSyncSource(ref _audioTimeSyncController).time > _lastObjectSkipTime && Utilities.AudioTimeSyncSource(ref _audioTimeSyncController).time < _outroSkipTime && _skippableOutro;
         public bool WantsToSkip => _audioTimeSyncController.state == AudioTimeSyncController.State.Playing && (_vrControllersInputManager.TriggerValue(XRNode.LeftHand) >= .8 || _vrControllersInputManager.TriggerValue(XRNode.RightHand) >= .8 || Input.GetKey(KeyCode.I));
 
-        public SkipDaemon(Config config, SiraLog siraLog, IVRPlatformHelper vrPlatformHelper, IDifficultyBeatmap difficultyBeatmap, ISkipDisplayService skipDisplayService, AudioTimeSyncController audioTimeSyncController, VRControllersInputManager vrControllersInputManager, AudioTimeSyncController.InitData initData)
+        public SkipDaemon(Config config, SiraLog siraLog, IVRPlatformHelper vrPlatformHelper, ISkipDisplayService skipDisplayService, AudioTimeSyncController audioTimeSyncController, IReadonlyBeatmapData readonlyBeatmapData, VRControllersInputManager vrControllersInputManager, AudioTimeSyncController.InitData initData)
         {
             _config = config;
             _siraLog = siraLog;
             _initData = initData;
             _vrPlatformHelper = vrPlatformHelper;
-            _difficultyBeatmap = difficultyBeatmap;
             _skipDisplayService = skipDisplayService;
+            _readonlyBeatmapData = readonlyBeatmapData;
             _audioTimeSyncController = audioTimeSyncController;
             _vrControllersInputManager = vrControllersInputManager;
         }
@@ -47,34 +49,21 @@ namespace IntroSkip
             _outroSkipTime = -1;
             _lastObjectSkipTime = -1;
 
-            var lineData = _difficultyBeatmap.beatmapData.beatmapLinesData;
+            var beatmapDataItems = _readonlyBeatmapData.allBeatmapDataItems;
             float firstObjectTime = _initData.audioClip.length;
             float lastObjectTime = -1f;
-            foreach (var line in lineData)
+
+            foreach (var item in beatmapDataItems)
             {
-                foreach (var beatmapObject in line.beatmapObjectsData)
+                if (item is NoteData note || (item is ObstacleData obstacle && IsObstacleInHeadArea(obstacle)))
                 {
-                    switch (beatmapObject.beatmapObjectType)
-                    {
-                        case BeatmapObjectType.Note:
-                            if (beatmapObject.time < firstObjectTime)
-                                firstObjectTime = beatmapObject.time;
-                            if (beatmapObject.time > lastObjectTime)
-                                lastObjectTime = beatmapObject.time;
-                            break;
-                        case BeatmapObjectType.Obstacle:
-                            ObstacleData obstacle = (beatmapObject as ObstacleData)!;
-                            if (!(obstacle.lineIndex == 0 && obstacle.width == 1) && !(obstacle.lineIndex == 3 && obstacle.width == 1))
-                            {
-                                if (beatmapObject.time < firstObjectTime)
-                                    firstObjectTime = beatmapObject.time;
-                                if (beatmapObject.time > lastObjectTime)
-                                    lastObjectTime = beatmapObject.time;
-                            }
-                            break;
-                    }
+                    if (item.time < firstObjectTime)
+                        firstObjectTime = item.time;
+                    if (item.time > lastObjectTime)
+                        lastObjectTime = item.time;
                 }
             }
+
             if (firstObjectTime > 5f)
             {
                 _skippableIntro = _config.AllowIntroSkip;
@@ -119,6 +108,12 @@ namespace IntroSkip
                 _skipDisplayService.Hide();
                 return;
             }
+        }
+
+        private bool IsObstacleInHeadArea(ObstacleData data)
+        {
+            var dataRect = new Rect(data.lineIndex, (int)data.lineLayer, data.width, data.height);
+            return _headSpaceRect.Overlaps(dataRect);
         }
     }
 }
