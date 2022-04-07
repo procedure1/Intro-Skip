@@ -16,7 +16,7 @@ namespace IntroSkip
         private readonly IReadonlyBeatmapData _readonlyBeatmapData;
         private readonly AudioTimeSyncController.InitData _initData;
         private readonly VRControllersInputManager _vrControllersInputManager;
-        private readonly Rect _headSpaceRect = new Rect(2, 2, 1, 1);
+        private readonly Rect _headSpaceRect = new Rect(1, 1, 2, 2);
 
         private float _introSkipTime = -1f;
         private float _outroSkipTime = -1f;
