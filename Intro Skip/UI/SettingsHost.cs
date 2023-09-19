@@ -36,7 +36,7 @@ namespace IntroSkip.UI
 
         public void Dispose()
         {
-            if (BSMLParser.IsSingletonAvailable && BSMLSettings.instance != null)
+            if (BSMLSettings.instance != null)//IsSingletonAvailable Method was removed (BSMLParser.IsSingletonAvailable && BSMLSettings.instance != null)
                 BSMLSettings.instance.RemoveSettingsMenu(this);
         }
 
