@@ -1,7 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using System;
 using TMPro;
-using Tweening;
+using Tweening;//Added new Tweening.dll dependency
 using UnityEngine;
 
 namespace IntroSkip.Displays
